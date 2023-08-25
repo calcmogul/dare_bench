@@ -2,21 +2,16 @@
 
 mod frc;
 
-use nalgebra::SMatrix;
-
 fn discretize_ab<const States: usize, const Inputs: usize>(
-    contA: &SMatrix<f64, States, States>,
-    contB: &SMatrix<f64, States, Inputs>,
+    contA: &nalgebra::SMatrix<f64, States, States>,
+    contB: &nalgebra::SMatrix<f64, States, Inputs>,
     dt: f64,
-    discA: &mut SMatrix<f64, States, States>,
-    discB: &mut SMatrix<f64, States, Inputs>,
-) where
-    [(); States + Inputs]:,
-{
+    discA: &mut nalgebra::SMatrix<f64, States, States>,
+    discB: &mut nalgebra::SMatrix<f64, States, Inputs>,
+) {
     // M = [A  B]
     //     [0  0]
-    let mut M = SMatrix::<f64, { States + Inputs }, { States + Inputs }>::zeros();
-    // let mut M = SMatrix::<f64, 7, 7>::zeros();
+    let mut M = nalgebra::SMatrix::<f64, 7, 7>::zeros();
     M.fixed_view_mut::<States, States>(0, 0).copy_from(contA);
     M.fixed_view_mut::<States, Inputs>(0, States)
         .copy_from(contB);
@@ -31,33 +26,33 @@ fn discretize_ab<const States: usize, const Inputs: usize>(
 
 #[rustfmt::skip]
 fn init_args(
-    A: &mut SMatrix<f64, 5, 5>,
-    B: &mut SMatrix<f64, 5, 2>,
-    Q: &mut SMatrix<f64, 5, 5>,
-    R: &mut SMatrix<f64, 2, 2>,
+    A: &mut nalgebra::SMatrix<f64, 5, 5>,
+    B: &mut nalgebra::SMatrix<f64, 5, 2>,
+    Q: &mut nalgebra::SMatrix<f64, 5, 5>,
+    R: &mut nalgebra::SMatrix<f64, 2, 2>,
 ) {
-    let contA = SMatrix::<f64, 5, 5>::new(
+    let contA = nalgebra::SMatrix::<f64, 5, 5>::new(
         0.0, 0.0, 0.0, 0.5, 0.5,
         0.0, 0.0, 0.0, 0.0, 0.0,
         0.0, 0.0, 0.0, -1.1111111111111112, 1.1111111111111112,
         0.0, 0.0, 0.0, -10.486221508345572, 5.782171664108812,
         0.0, 0.0, 0.0, 5.782171664108812, -10.486221508345572,
     );
-    let contB = SMatrix::<f64, 5, 2>::new(
+    let contB = nalgebra::SMatrix::<f64, 5, 2>::new(
         0.0, 0.0,
         0.0, 0.0,
         0.0, 0.0,
         6.664631384780125, -5.106998986026231,
         -5.106998986026231, 6.664631384780125,
     );
-    let Q = SMatrix::<f64, 5, 5>::new(
+    let Q = nalgebra::SMatrix::<f64, 5, 5>::new(
         256.0, 0.0, 0.0, 0.0, 0.0,
         0.0, 64.0, 0.0, 0.0, 0.0,
         0.0, 0.0, 0.16, 0.0, 0.0,
         0.0, 0.0, 0.0, 1.10803324099723, 0.0,
         0.0, 0.0, 0.0, 0.0, 1.10803324099723,
     );
-    let R = SMatrix::<f64, 2, 2>::new(
+    let R = nalgebra::SMatrix::<f64, 2, 2>::new(
         0.006944444444444444, 0.0,
         0.0, 0.006944444444444444,
     );
@@ -69,10 +64,10 @@ fn init_args(
 }
 
 fn main() {
-    let A: SMatrix<f64, 5, 5>;
-    let B: SMatrix<f64, 5, 2>;
-    let Q: SMatrix<f64, 5, 5>;
-    let R: SMatrix<f64, 2, 2>;
+    let A: nalgebra::SMatrix<f64, 5, 5>;
+    let B: nalgebra::SMatrix<f64, 5, 2>;
+    let Q: nalgebra::SMatrix<f64, 5, 5>;
+    let R: nalgebra::SMatrix<f64, 2, 2>;
     init_args(&mut A, &mut B, &mut Q, &mut R);
 
     let S = frc::dare::<5, 2>(&A, &B, &Q, &R);

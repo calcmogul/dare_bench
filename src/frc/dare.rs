@@ -1,5 +1,3 @@
-use nalgebra::SMatrix;
-
 // Works cited:
 //
 // [1] E. K.-W. Chu, H.-Y. Fan, W.-W. Lin & C.-S. Wang "Structure-Preserving
@@ -7,12 +5,35 @@ use nalgebra::SMatrix;
 //     International Journal of Control, 77:8, 767-788, 2004.
 //     DOI: 10.1080/00207170410001714988
 
+use nalgebra::allocator::Allocator;
+use nalgebra::DefaultAllocator;
+
+fn static_to_dynamic_matrix<Rows, Cols>(
+    matrix: &nalgebra::OMatrix<f64, Rows, Cols>,
+) -> nalgebra::OMatrix<f64, nalgebra::Dyn, nalgebra::Dyn>
+where
+    Rows: nalgebra::Dim + nalgebra::DimMin<Cols>,
+    Cols: nalgebra::Dim,
+    DefaultAllocator: Allocator<f64, Rows, Cols>,
+{
+    let mut dynamic_matrix = nalgebra::OMatrix::<f64, nalgebra::Dyn, nalgebra::Dyn>::zeros(
+        matrix.nrows(),
+        matrix.ncols(),
+    );
+    for i in 0..matrix.nrows() {
+        for j in 0..matrix.ncols() {
+            dynamic_matrix[(i, j)] = matrix[(i, j)];
+        }
+    }
+    dynamic_matrix
+}
+
 pub fn dare<const States: usize, const Inputs: usize>(
-    A: &SMatrix<f64, States, States>,
-    B: &SMatrix<f64, States, Inputs>,
-    Q: &SMatrix<f64, States, States>,
-    R: &SMatrix<f64, Inputs, Inputs>,
-) -> SMatrix<f64, States, States> {
+    A: &nalgebra::SMatrix<f64, States, States>,
+    B: &nalgebra::SMatrix<f64, States, Inputs>,
+    Q: &nalgebra::SMatrix<f64, States, States>,
+    R: &nalgebra::SMatrix<f64, Inputs, Inputs>,
+) -> nalgebra::SMatrix<f64, States, States> {
     // Implements the SDA algorithm on page 5 of [1].
 
     // A₀ = A
@@ -33,9 +54,9 @@ pub fn dare<const States: usize, const Inputs: usize>(
         H_k = H_k1;
 
         // W = I + GₖHₖ
-        let W = SMatrix::<f64, States, States>::identity() + G_k * H_k;
+        let W = nalgebra::SMatrix::<f64, States, States>::identity() + G_k * H_k;
 
-        let W_solver = W.lu();
+        let W_solver = static_to_dynamic_matrix(&W).lu();
 
         // Solve WV₁ = Aₖ for V₁
         let V_1 = W_solver.solve(&A_k).unwrap();
