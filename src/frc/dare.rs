@@ -1,4 +1,8 @@
-use nalgebra::SMatrix;
+use nalgebra::{
+    allocator::{Allocator, SameShapeAllocator},
+    constraint::{AreMultipliable, SameNumberOfRows, ShapeConstraint},
+    ArrayStorage, Const, DefaultAllocator, DimMin, DimMinimum, SMatrix,
+};
 
 // Works cited:
 //
@@ -12,7 +16,22 @@ pub fn dare<const States: usize, const Inputs: usize>(
     B: &SMatrix<f64, States, Inputs>,
     Q: &SMatrix<f64, States, States>,
     R: &SMatrix<f64, Inputs, Inputs>,
-) -> SMatrix<f64, States, States> {
+) -> SMatrix<f64, States, States>
+where
+    DefaultAllocator:
+        Allocator<f64, Const<States>, Const<States>, Buffer = ArrayStorage<f64, States, States>>,
+    DefaultAllocator:
+        Allocator<f64, Const<States>, Const<Inputs>, Buffer = ArrayStorage<f64, States, Inputs>>,
+    DefaultAllocator:
+        SameShapeAllocator<f64, Const<States>, Const<States>, Const<States>, Const<States>>,
+    DefaultAllocator: Allocator<(usize, usize), DimMinimum<Const<States>, Const<States>>>,
+
+    ShapeConstraint: AreMultipliable<Const<States>, Const<Inputs>, Const<Inputs>, Const<States>>,
+    ShapeConstraint: SameNumberOfRows<Const<Inputs>, Const<Inputs>>,
+    ShapeConstraint: SameNumberOfRows<Const<States>, Const<States>, Representative = Const<States>>,
+
+    Const<States>: DimMin<Const<States>, Output = Const<States>>,
+{
     // Implements the SDA algorithm on page 5 of [1].
 
     // A₀ = A
