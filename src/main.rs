@@ -86,12 +86,10 @@ fn main() {
     init_args(&mut A, &mut B, &mut Q, &mut R);
 
     let start = Instant::now();
-    for n in 0..1000 {
-        frc::dare::<5, 2>(&A, &B, &Q, &R);
-    }
+    let S = frc::dare::<5, 2>(&A, &B, &Q, &R);
     let end = Instant::now();
-    println!(
-        "elapsed = {} us\n",
-        (end - start).as_secs_f64() * 1e6 / 1000.0
-    );
+
+    println!("S = {}", S);
+
+    println!("elapsed = {} us", (end - start).as_secs_f64() * 1e6);
 }
