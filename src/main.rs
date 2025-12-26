@@ -4,27 +4,27 @@ use nalgebra::{DMatrix, dmatrix};
 use std::time::Instant;
 
 fn discretize_ab(
-    contA: &DMatrix<f64>,
-    contB: &DMatrix<f64>,
+    cont_A: &DMatrix<f64>,
+    cont_B: &DMatrix<f64>,
     dt: f64,
-    discA: &mut DMatrix<f64>,
-    discB: &mut DMatrix<f64>,
+    disc_A: &mut DMatrix<f64>,
+    disc_B: &mut DMatrix<f64>,
 ) {
-    let States = contA.nrows();
-    let Inputs = contB.ncols();
+    let States = cont_A.nrows();
+    let Inputs = cont_B.ncols();
 
     // M = [A  B]
     //     [0  0]
     let mut M = DMatrix::<f64>::zeros(States + Inputs, States + Inputs);
-    M.view_mut((0, 0), (States, States)).copy_from(contA);
-    M.view_mut((0, States), (States, Inputs)).copy_from(contB);
+    M.view_mut((0, 0), (States, States)).copy_from(cont_A);
+    M.view_mut((0, States), (States, Inputs)).copy_from(cont_B);
 
     // ϕ = eᴹᵀ = [A_d  B_d]
     //           [ 0    I ]
     let phi = (M * dt).exp();
 
-    *discA = phi.view((0, 0), (States, States)).into();
-    *discB = phi.view((0, States), (States, Inputs)).into();
+    *disc_A = phi.view((0, 0), (States, States)).into();
+    *disc_B = phi.view((0, States), (States, Inputs)).into();
 }
 
 #[rustfmt::skip]
@@ -33,13 +33,13 @@ fn init_args(
     B: &mut DMatrix<f64>,
     Q: &mut DMatrix<f64>,
     R: &mut DMatrix<f64>) {
-    let mut contA = dmatrix![
+    let mut cont_A = dmatrix![
         0.0, 0.0, 0.0, 0.5, 0.5;
         0.0, 0.0, 0.0, 0.0, 0.0;
         0.0, 0.0, 0.0, -1.1111111111111112, 1.1111111111111112;
         0.0, 0.0, 0.0, -10.486221508345572, 5.782171664108812;
         0.0, 0.0, 0.0, 5.782171664108812, -10.486221508345572];
-    let contB = dmatrix![
+    let cont_B = dmatrix![
         0.0, 0.0;
         0.0, 0.0;
         0.0, 0.0;
@@ -56,9 +56,9 @@ fn init_args(
         0.0, 0.006944444444444444];
 
     const VELOCITY: f64 = 2.0;
-    contA[(1, 2)] = VELOCITY;
+    cont_A[(1, 2)] = VELOCITY;
 
-    discretize_ab(&contA, &contB, 0.005, A, B);
+    discretize_ab(&cont_A, &cont_B, 0.005, A, B);
 }
 
 fn main() {
